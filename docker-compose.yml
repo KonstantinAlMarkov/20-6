@@ -1,0 +1,45 @@
+version: "3.8"
+services:
+  webserver:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: myapp/nginx
+    container_name: webserver
+    volumes:
+      - ./!SHARED/code:/data/application.local/:rw
+      - ./!SHARED/application.local.conf:/etc/nginx/sites-enabled/application.local.conf
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - app-network
+  phpfpm:
+    build:
+      context: ./php-fpm
+      dockerfile: Dockerfile
+    image: myapp/php
+    container_name: phpfpm
+    volumes:
+      - ./!SHARED/code:/data/application.local/:rw
+      - ./!SHARED/php.ini:/usr/local/etc/php/php.ini
+    networks:
+      - app-network     
+  db:
+    image: mysql:5.7.22
+    container_name: sqldb
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./!SHARED/dbdata:/var/lib/mysql
+      - ./!SHARED/my.cnf :/etc/mysql/my.cnf    
+    networks:
+      - app-network 
+networks:
+  app-network:
+    driver: bridge
+
+
